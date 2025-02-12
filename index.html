@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Quest - ADHD-Friendly Task Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Baloo 2', cursive;
+            background: #f0f9ff;
+        }
+        .task-complete {
+            animation: celebrate 0.5s ease-in-out;
+        }
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .character {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-600 mb-2">Focus Quest</h1>
+            <p class="text-gray-600">Complete tasks, earn stars, level up your character!</p>
+        </header>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Character Section -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="text-center">
+                    <div id="character" class="character text-8xl mb-4">🦸‍♂️</div>
+                    <div class="mb-4">
+                        <h2 class="text-2xl font-bold text-blue-600">Level <span id="level">1</span></h2>
+                        <div class="w-full bg-gray-200 rounded-full h-4 mt-2">
+                            <div id="xp-bar" class="bg-blue-500 rounded-full h-4" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center items-center gap-2">
+                        <i class="bi bi-star-fill text-yellow-400"></i>
+                        <span id="stars" class="text-xl font-bold">0</span> Stars
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Management Section -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="mb-4">
+                    <form id="task-form" class="flex gap-2">
+                        <input type="text" id="task-input" placeholder="Add a new task..." 
+                            class="flex-1 p-2 border-2 border-blue-200 rounded-lg focus:outline-none focus:border-blue-500">
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                            Add
+                        </button>
+                    </form>
+                </div>
+                <div id="task-list" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Rewards Panel -->
+        <div class="mt-8 bg-white p-6 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">Rewards Shop</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button onclick="buyCharacter('🦸‍♂️')" class="p-4 bg-blue-100 rounded-lg hover:bg-blue-200 transition">
+                    🦸‍♂️ Hero (10 ⭐)
+                </button>
+                <button onclick="buyCharacter('🧙')" class="p-4 bg-blue-100 rounded-lg hover:bg-blue-200 transition">
+                    🧙 Wizard (20 ⭐)
+                </button>
+                <button onclick="buyCharacter('🦊')" class="p-4 bg-blue-100 rounded-lg hover:bg-blue-200 transition">
+                    🦊 Fox (30 ⭐)
+                </button>
+                <button onclick="buyCharacter('🐉')" class="p-4 bg-blue-100 rounded-lg hover:bg-blue-200 transition">
+                    🐉 Dragon (50 ⭐)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tasks = [];
+        let stars = 0;
+        let level = 1;
+        let xp = 0;
+        const xpNeeded = 100;
+
+        document.getElementById('task-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('task-input');
+            if (input.value.trim()) {
+                addTask(input.value);
+                input.value = '';
+            }
+        });
+
+        function addTask(text) {
+            const task = {
+                id: Date.now(),
+                text,
+                completed: false
+            };
+            tasks.push(task);
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = `flex items-center gap-2 p-2 ${task.completed ? 'bg-green-100' : 'bg-gray-50'} rounded-lg`;
+                taskElement.innerHTML = `
+                    <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                        onchange="toggleTask(${task.id})" 
+                        class="w-5 h-5 text-blue-600">
+                    <span class="${task.completed ? 'line-through' : ''}">${task.text}</span>
+                    <button onclick="deleteTask(${task.id})" class="ml-auto text-red-500 hover:text-red-700">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `;
+                taskList.appendChild(taskElement);
+            });
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task && !task.completed) {
+                task.completed = true;
+                addReward();
+                taskElement.classList.add('task-complete');
+                renderTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+        }
+
+        function addReward() {
+            stars += 2;
+            xp += 25;
+            
+            if (xp >= xpNeeded) {
+                level++;
+                xp = xp - xpNeeded;
+                playLevelUpAnimation();
+            }
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('stars').textContent = stars;
+            document.getElementById('level').textContent = level;
+            document.getElementById('xp-bar').style.width = `${(xp/xpNeeded) * 100}%`;
+        }
+
+        function buyCharacter(character) {
+            const costs = {'🦸‍♂️': 10, '🧙': 20, '🦊': 30, '🐉': 50};
+            const cost = costs[character];
+            
+            if (stars >= cost) {
+                stars -= cost;
+                document.getElementById('character').textContent = character;
+                updateStats();
+                
+                // Celebration animation
+                document.getElementById('character').style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    document.getElementById('character').style.transform = 'scale(1)';
+                }, 200);
+            } else {
+                alert('Not enough stars! Complete more tasks to earn stars.');
+            }
+        }
+
+        function playLevelUpAnimation() {
+            const character = document.getElementById('character');
+            character.style.transform = 'scale(1.3) rotate(360deg)';
+            setTimeout(() => {
+                character.style.transform = 'scale(1) rotate(0deg)';
+            }, 500);
+        }
+
+        // Add some initial tasks
+        addTask('Complete homework');
+        addTask('Clean room');
+        addTask('Read for 15 minutes');
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
